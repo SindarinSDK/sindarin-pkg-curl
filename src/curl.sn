@@ -1,0 +1,138 @@
+# ==============================================================================
+# sindarin-pkg-curl/curl.sn — HTTP client using libcurl
+# ==============================================================================
+#
+# Usage:
+#   import "sindarin-pkg-curl/src/curl"
+#
+#   var client: CurlClient = CurlClient.new()
+#   var resp: HttpResponse = client.get("https://example.com")
+#   print(resp.status())
+#   print(resp.body())
+#   resp.dispose()
+#   client.dispose()
+#
+# Methods:
+#   CurlClient.new()                              Create a new HTTP client
+#   client.get(url)                               GET request
+#   client.post(url, contentType, body)           POST request
+#   client.put(url, contentType, body)            PUT request
+#   client.patch(url, contentType, body)          PATCH request
+#   client.delete(url)                            DELETE request
+#   client.setTimeout(ms)                         Set request timeout (ms)
+#   client.setHeader(name, value)                 Add a persistent request header
+#   client.dispose()                              Free client resources
+#
+#   resp.status()                                 HTTP status code
+#   resp.body()                                   Response body as string
+#   resp.headers()                                Raw response headers
+#   resp.header(name)                             Value of a specific header
+#   resp.dispose()                                Free response resources
+#
+# ==============================================================================
+
+@source "curl.sn.c"
+@link curl
+@link ssl
+@link crypto
+@link z
+
+# ==============================================================================
+# HttpResponse — Result of an HTTP request
+# ==============================================================================
+
+@alias "RtHttpResponse"
+native struct HttpResponse as ref =>
+    @alias "status_code"
+    _statusCode: int
+
+    @alias "body_str"
+    _bodyStr: *byte
+
+    @alias "headers_str"
+    _headersStr: *byte
+
+    # HTTP status code (e.g. 200, 404)
+    fn status(): int =>
+        return sn_curl_response_status(self)
+
+    # Response body as a string
+    fn body(): str =>
+        return sn_curl_response_body(self)
+
+    # Raw response headers (all headers as a single string)
+    fn headers(): str =>
+        return sn_curl_response_headers(self)
+
+    # Value of a named response header (case-insensitive, empty string if absent)
+    fn header(name: str): str =>
+        return sn_curl_response_header(self, name)
+
+    # Free response memory
+    @alias "sn_curl_response_dispose"
+    native fn dispose(): void
+
+# ==============================================================================
+# CurlClient — Reusable HTTP client with configurable options
+# ==============================================================================
+
+@alias "RtCurlClient"
+native struct CurlClient as ref =>
+    @alias "internal"
+    _internal: long
+
+    # Create a new HTTP client
+    static fn new(): CurlClient =>
+        return sn_curl_client_new()
+
+    # Perform a GET request
+    fn get(url: str): HttpResponse =>
+        return sn_curl_client_get(self, url)
+
+    # Perform a POST request with a body
+    fn post(url: str, contentType: str, body: str): HttpResponse =>
+        return sn_curl_client_post(self, url, contentType, body)
+
+    # Perform a PUT request with a body
+    fn put(url: str, contentType: str, body: str): HttpResponse =>
+        return sn_curl_client_put(self, url, contentType, body)
+
+    # Perform a PATCH request with a body
+    fn patch(url: str, contentType: str, body: str): HttpResponse =>
+        return sn_curl_client_patch(self, url, contentType, body)
+
+    # Perform a DELETE request
+    fn delete(url: str): HttpResponse =>
+        return sn_curl_client_delete(self, url)
+
+    # Set the request timeout in milliseconds (0 = no timeout)
+    fn setTimeout(ms: int): void =>
+        sn_curl_client_set_timeout(self, ms)
+
+    # Add a persistent request header sent with every request
+    fn setHeader(name: str, value: str): void =>
+        sn_curl_client_set_header(self, name, value)
+
+    # Free client resources
+    @alias "sn_curl_client_dispose"
+    native fn dispose(): void
+
+# ==============================================================================
+# Runtime Function Declarations
+# ==============================================================================
+
+# HttpResponse
+native fn sn_curl_response_status(r: HttpResponse): int
+native fn sn_curl_response_body(r: HttpResponse): str
+native fn sn_curl_response_headers(r: HttpResponse): str
+native fn sn_curl_response_header(r: HttpResponse, name: str): str
+
+# CurlClient
+native fn sn_curl_client_new(): CurlClient
+native fn sn_curl_client_get(client: CurlClient, url: str): HttpResponse
+native fn sn_curl_client_post(client: CurlClient, url: str, contentType: str, body: str): HttpResponse
+native fn sn_curl_client_put(client: CurlClient, url: str, contentType: str, body: str): HttpResponse
+native fn sn_curl_client_patch(client: CurlClient, url: str, contentType: str, body: str): HttpResponse
+native fn sn_curl_client_delete(client: CurlClient, url: str): HttpResponse
+native fn sn_curl_client_set_timeout(client: CurlClient, ms: int): void
+native fn sn_curl_client_set_header(client: CurlClient, name: str, value: str): void
