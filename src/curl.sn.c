@@ -14,12 +14,6 @@
 
 #ifdef _WIN32
     #define strncasecmp _strnicmp
-    #pragma comment(lib, "iphlpapi.lib")
-    #pragma comment(lib, "secur32.lib")
-    #pragma comment(lib, "ws2_32.lib")
-#elif defined(__APPLE__)
-    #pragma comment(linker, "-framework SystemConfiguration")
-    #pragma comment(linker, "-framework CoreFoundation")
 #endif
 
 #define CURL_STATICLIB
