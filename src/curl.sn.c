@@ -107,11 +107,7 @@ typedef struct {
 
 static RtHttpResponse *make_response(int status, CurlBuffer *body, CurlBuffer *hdrs)
 {
-    RtHttpResponse *r = (RtHttpResponse *)calloc(1, sizeof(RtHttpResponse));
-    if (!r) {
-        fprintf(stderr, "make_response: allocation failed\n");
-        exit(1);
-    }
+    RtHttpResponse *r = __sn__HttpResponse__new();
     r->status_code = (long long)status;
     r->body_str    = strdup(body->data ? body->data : "");
     r->headers_str = strdup(hdrs->data ? hdrs->data : "");
@@ -288,11 +284,7 @@ RtCurlClient *sn_curl_client_new(void)
 {
     ensure_curl_initialized();
 
-    RtCurlClient *c = (RtCurlClient *)calloc(1, sizeof(RtCurlClient));
-    if (!c) {
-        fprintf(stderr, "sn_curl_client_new: allocation failed\n");
-        exit(1);
-    }
+    RtCurlClient *c = __sn__CurlClient__new();
 
     CurlClientInternal *internal = (CurlClientInternal *)calloc(1, sizeof(CurlClientInternal));
     if (!internal) {
