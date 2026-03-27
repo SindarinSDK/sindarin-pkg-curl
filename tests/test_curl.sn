@@ -1,43 +1,43 @@
 import "../src/curl"
 
 fn main(): void =>
-    var client: CurlClient = CurlClient.new()
+  var client: CurlClient = CurlClient.new()
 
-    # Test 1: GET request returns 200
-    var resp: HttpResponse = client.get("https://httpbin.org/get")
-    if resp.status() != 200 =>
-        print($"FAIL: GET expected status 200, got {resp.status()}\n")
-        exit(1)
-    resp.dispose()
+  # Test 1: GET request returns 200
+  var resp: HttpResponse = client.get("https://httpbin.org/get")
+  if resp.status() != 200 =>
+    print($"FAIL: GET expected status 200, got {resp.status()}\n")
+    exit(1)
+  resp.dispose()
 
-    # Test 2: POST request returns 200
-    var postResp: HttpResponse = client.post("https://httpbin.org/post", "application/json", "{\"hello\":\"sindarin\"}")
-    if postResp.status() != 200 =>
-        print($"FAIL: POST expected status 200, got {postResp.status()}\n")
-        exit(1)
-    postResp.dispose()
+  # Test 2: POST request returns 200
+  var postResp: HttpResponse = client.post("https://httpbin.org/post", "application/json", "{\"hello\":\"sindarin\"}")
+  if postResp.status() != 200 =>
+    print($"FAIL: POST expected status 200, got {postResp.status()}\n")
+    exit(1)
+  postResp.dispose()
 
-    # Test 3: custom header is accepted (endpoint echoes headers back)
-    client.setHeader("X-Sindarin-Test", "curl-package")
-    var hdrResp: HttpResponse = client.get("https://httpbin.org/headers")
-    if hdrResp.status() != 200 =>
-        print($"FAIL: headers test expected status 200, got {hdrResp.status()}\n")
-        exit(1)
-    hdrResp.dispose()
+  # Test 3: custom header is accepted (endpoint echoes headers back)
+  client.setHeader("X-Sindarin-Test", "curl-package")
+  var hdrResp: HttpResponse = client.get("https://httpbin.org/headers")
+  if hdrResp.status() != 200 =>
+    print($"FAIL: headers test expected status 200, got {hdrResp.status()}\n")
+    exit(1)
+  hdrResp.dispose()
 
-    # Test 4: DELETE request returns 200
-    var delResp: HttpResponse = client.delete("https://httpbin.org/delete")
-    if delResp.status() != 200 =>
-        print($"FAIL: DELETE expected status 200, got {delResp.status()}\n")
-        exit(1)
-    delResp.dispose()
+  # Test 4: DELETE request returns 200
+  var delResp: HttpResponse = client.delete("https://httpbin.org/delete")
+  if delResp.status() != 200 =>
+    print($"FAIL: DELETE expected status 200, got {delResp.status()}\n")
+    exit(1)
+  delResp.dispose()
 
-    # Test 5: 404 response is surfaced correctly
-    var notFound: HttpResponse = client.get("https://httpbin.org/status/404")
-    if notFound.status() != 404 =>
-        print($"FAIL: expected 404, got {notFound.status()}\n")
-        exit(1)
-    notFound.dispose()
+  # Test 5: 404 response is surfaced correctly
+  var notFound: HttpResponse = client.get("https://httpbin.org/status/404")
+  if notFound.status() != 404 =>
+    print($"FAIL: expected 404, got {notFound.status()}\n")
+    exit(1)
+  notFound.dispose()
 
-    client.dispose()
-    print("PASS\n")
+  client.dispose()
+  print("PASS\n")
