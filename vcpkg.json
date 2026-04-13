@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "sindarin-curl",
+  "version": "1.0.0",
+  "description": "cURL HTTP client library for Sindarin",
+  "dependencies": [
+    {
+      "name": "curl",
+      "default-features": false,
+      "features": ["ssl"]
+    },
+    "openssl"
+  ]
+}
