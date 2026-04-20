@@ -6,7 +6,7 @@
 # import "sindarin-pkg-curl/src/curl"
 #
 # var client: CurlClient = CurlClient.new()
-# var resp: HttpResponse = client.get("https://example.com")
+# var resp: CurlResponse = client.get("https://example.com")
 # print(resp.status())
 # print(resp.body())
 # resp.dispose()
@@ -38,11 +38,11 @@
 @link z
 
 # ==============================================================================
-# HttpResponse — Result of an HTTP request
+# CurlResponse — Result of an HTTP request
 # ==============================================================================
 
-@alias "RtHttpResponse"
-native struct HttpResponse as ref =>
+@alias "RtCurlResponse"
+native struct CurlResponse as ref =>
   @alias "status_code"
   _statusCode: int
 
@@ -86,23 +86,23 @@ native struct CurlClient as ref =>
     return sn_curl_client_new()
 
   # Perform a GET request
-  fn get(url: str): HttpResponse =>
+  fn get(url: str): CurlResponse =>
     return sn_curl_client_get(self, url)
 
   # Perform a POST request with a body
-  fn post(url: str, contentType: str, body: str): HttpResponse =>
+  fn post(url: str, contentType: str, body: str): CurlResponse =>
     return sn_curl_client_post(self, url, contentType, body)
 
   # Perform a PUT request with a body
-  fn put(url: str, contentType: str, body: str): HttpResponse =>
+  fn put(url: str, contentType: str, body: str): CurlResponse =>
     return sn_curl_client_put(self, url, contentType, body)
 
   # Perform a PATCH request with a body
-  fn patch(url: str, contentType: str, body: str): HttpResponse =>
+  fn patch(url: str, contentType: str, body: str): CurlResponse =>
     return sn_curl_client_patch(self, url, contentType, body)
 
   # Perform a DELETE request
-  fn delete(url: str): HttpResponse =>
+  fn delete(url: str): CurlResponse =>
     return sn_curl_client_delete(self, url)
 
   # Set the request timeout in milliseconds (0 = no timeout)
@@ -121,18 +121,18 @@ native struct CurlClient as ref =>
 # Runtime Function Declarations
 # ==============================================================================
 
-# HttpResponse
-native fn sn_curl_response_status(r: HttpResponse): int
-native fn sn_curl_response_body(r: HttpResponse): str
-native fn sn_curl_response_headers(r: HttpResponse): str
-native fn sn_curl_response_header(r: HttpResponse, name: str): str
+# CurlResponse
+native fn sn_curl_response_status(r: CurlResponse): int
+native fn sn_curl_response_body(r: CurlResponse): str
+native fn sn_curl_response_headers(r: CurlResponse): str
+native fn sn_curl_response_header(r: CurlResponse, name: str): str
 
 # CurlClient
 native fn sn_curl_client_new(): CurlClient
-native fn sn_curl_client_get(client: CurlClient, url: str): HttpResponse
-native fn sn_curl_client_post(client: CurlClient, url: str, contentType: str, body: str): HttpResponse
-native fn sn_curl_client_put(client: CurlClient, url: str, contentType: str, body: str): HttpResponse
-native fn sn_curl_client_patch(client: CurlClient, url: str, contentType: str, body: str): HttpResponse
-native fn sn_curl_client_delete(client: CurlClient, url: str): HttpResponse
+native fn sn_curl_client_get(client: CurlClient, url: str): CurlResponse
+native fn sn_curl_client_post(client: CurlClient, url: str, contentType: str, body: str): CurlResponse
+native fn sn_curl_client_put(client: CurlClient, url: str, contentType: str, body: str): CurlResponse
+native fn sn_curl_client_patch(client: CurlClient, url: str, contentType: str, body: str): CurlResponse
+native fn sn_curl_client_delete(client: CurlClient, url: str): CurlResponse
 native fn sn_curl_client_set_timeout(client: CurlClient, ms: int): void
 native fn sn_curl_client_set_header(client: CurlClient, name: str, value: str): void

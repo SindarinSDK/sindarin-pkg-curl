@@ -1,7 +1,7 @@
 /* ==============================================================================
  * sindarin-pkg-curl/curl.sn.c — HTTP client implementation using libcurl
  * ==============================================================================
- * Implements CurlClient and HttpResponse via the libcurl easy interface.
+ * Implements CurlClient and CurlResponse via the libcurl easy interface.
  * Each request creates a fresh easy handle; CurlClient holds persistent
  * options (custom headers, timeout) in a heap-allocated internal struct.
  * ============================================================================== */
@@ -23,7 +23,7 @@
  * Type Definitions
  * ============================================================================ */
 
-typedef __sn__HttpResponse RtHttpResponse;
+typedef __sn__CurlResponse RtCurlResponse;
 typedef __sn__CurlClient   RtCurlClient;
 
 /* ============================================================================
@@ -102,38 +102,38 @@ typedef struct {
 } CurlClientInternal;
 
 /* ============================================================================
- * HttpResponse helpers
+ * CurlResponse helpers
  * ============================================================================ */
 
-static RtHttpResponse *make_response(int status, CurlBuffer *body, CurlBuffer *hdrs)
+static RtCurlResponse *make_response(int status, CurlBuffer *body, CurlBuffer *hdrs)
 {
-    RtHttpResponse *r = __sn__HttpResponse__new();
+    RtCurlResponse *r = __sn__CurlResponse__new();
     r->status_code = (long long)status;
     r->body_str    = strdup(body->data ? body->data : "");
     r->headers_str = strdup(hdrs->data ? hdrs->data : "");
     return r;
 }
 
-long long sn_curl_response_status(RtHttpResponse *r)
+long long sn_curl_response_status(RtCurlResponse *r)
 {
     if (!r) return 0;
     return r->status_code;
 }
 
-char *sn_curl_response_body(RtHttpResponse *r)
+char *sn_curl_response_body(RtCurlResponse *r)
 {
     if (!r || !r->body_str) return strdup("");
     return strdup((char *)r->body_str);
 }
 
-char *sn_curl_response_headers(RtHttpResponse *r)
+char *sn_curl_response_headers(RtCurlResponse *r)
 {
     if (!r || !r->headers_str) return strdup("");
     return strdup((char *)r->headers_str);
 }
 
 /* Linear scan through raw headers for "Name: value\r\n" (case-insensitive). */
-char *sn_curl_response_header(RtHttpResponse *r, char *name)
+char *sn_curl_response_header(RtCurlResponse *r, char *name)
 {
     if (!r || !r->headers_str || !name) return strdup("");
 
@@ -161,7 +161,7 @@ char *sn_curl_response_header(RtHttpResponse *r, char *name)
     return strdup("");
 }
 
-void sn_curl_response_dispose(RtHttpResponse *r)
+void sn_curl_response_dispose(RtCurlResponse *r)
 {
     if (!r) return;
     free(r->body_str);
@@ -203,7 +203,7 @@ static struct curl_slist *build_headers(CurlClientInternal *internal,
  * Internal: init easy handle, apply client options, perform, return response
  * ============================================================================ */
 
-static RtHttpResponse *do_request(CurlClientInternal *internal,
+static RtCurlResponse *do_request(CurlClientInternal *internal,
                                   const char         *url,
                                   const char         *method,
                                   const char         *content_type,
@@ -266,7 +266,7 @@ static RtHttpResponse *do_request(CurlClientInternal *internal,
     long status = 0;
     curl_easy_getinfo(easy, CURLINFO_RESPONSE_CODE, &status);
 
-    RtHttpResponse *resp = make_response((int)status, &resp_body, &resp_hdrs);
+    RtCurlResponse *resp = make_response((int)status, &resp_body, &resp_hdrs);
 
     curl_buffer_free(&resp_body);
     curl_buffer_free(&resp_hdrs);
@@ -317,34 +317,34 @@ void sn_curl_client_set_header(RtCurlClient *client, char *name, char *value)
     free(hdr);
 }
 
-RtHttpResponse *sn_curl_client_get(RtCurlClient *client, char *url)
+RtCurlResponse *sn_curl_client_get(RtCurlClient *client, char *url)
 {
     CurlClientInternal *internal = client ? (CurlClientInternal *)(uintptr_t)client->internal : NULL;
     return do_request(internal, url, "GET", NULL, NULL);
 }
 
-RtHttpResponse *sn_curl_client_post(RtCurlClient *client, char *url,
+RtCurlResponse *sn_curl_client_post(RtCurlClient *client, char *url,
                                     char *content_type, char *body)
 {
     CurlClientInternal *internal = client ? (CurlClientInternal *)(uintptr_t)client->internal : NULL;
     return do_request(internal, url, "POST", content_type, body);
 }
 
-RtHttpResponse *sn_curl_client_put(RtCurlClient *client, char *url,
+RtCurlResponse *sn_curl_client_put(RtCurlClient *client, char *url,
                                    char *content_type, char *body)
 {
     CurlClientInternal *internal = client ? (CurlClientInternal *)(uintptr_t)client->internal : NULL;
     return do_request(internal, url, "PUT", content_type, body);
 }
 
-RtHttpResponse *sn_curl_client_patch(RtCurlClient *client, char *url,
+RtCurlResponse *sn_curl_client_patch(RtCurlClient *client, char *url,
                                      char *content_type, char *body)
 {
     CurlClientInternal *internal = client ? (CurlClientInternal *)(uintptr_t)client->internal : NULL;
     return do_request(internal, url, "PATCH", content_type, body);
 }
 
-RtHttpResponse *sn_curl_client_delete(RtCurlClient *client, char *url)
+RtCurlResponse *sn_curl_client_delete(RtCurlClient *client, char *url)
 {
     CurlClientInternal *internal = client ? (CurlClientInternal *)(uintptr_t)client->internal : NULL;
     return do_request(internal, url, "DELETE", NULL, NULL);

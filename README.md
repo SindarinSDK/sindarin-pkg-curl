@@ -23,7 +23,7 @@ import "sindarin-pkg-curl/src/curl"
 fn main(): void =>
     var client: CurlClient = CurlClient.new()
 
-    var resp: HttpResponse = client.get("https://api.example.com/users")
+    var resp: CurlResponse = client.get("https://api.example.com/users")
     print($"status: {resp.status()}\n")
     print(resp.body())
     resp.dispose()
@@ -44,11 +44,11 @@ A reusable HTTP client. Custom headers and timeouts set on the client apply to e
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `new` | `static fn new(): CurlClient` | Create a new HTTP client |
-| `get` | `fn get(url: str): HttpResponse` | Perform a GET request |
-| `post` | `fn post(url: str, contentType: str, body: str): HttpResponse` | Perform a POST request |
-| `put` | `fn put(url: str, contentType: str, body: str): HttpResponse` | Perform a PUT request |
-| `patch` | `fn patch(url: str, contentType: str, body: str): HttpResponse` | Perform a PATCH request |
-| `delete` | `fn delete(url: str): HttpResponse` | Perform a DELETE request |
+| `get` | `fn get(url: str): CurlResponse` | Perform a GET request |
+| `post` | `fn post(url: str, contentType: str, body: str): CurlResponse` | Perform a POST request |
+| `put` | `fn put(url: str, contentType: str, body: str): CurlResponse` | Perform a PUT request |
+| `patch` | `fn patch(url: str, contentType: str, body: str): CurlResponse` | Perform a PATCH request |
+| `delete` | `fn delete(url: str): CurlResponse` | Perform a DELETE request |
 | `setTimeout` | `fn setTimeout(ms: int): void` | Set request timeout in milliseconds (0 = no timeout) |
 | `setHeader` | `fn setHeader(name: str, value: str): void` | Add a header sent with every request |
 | `dispose` | `fn dispose(): void` | Free client resources |
@@ -59,12 +59,12 @@ client.setTimeout(5000)
 client.setHeader("Authorization", "Bearer my-token")
 
 // GET
-var resp: HttpResponse = client.get("https://api.example.com/items")
+var resp: CurlResponse = client.get("https://api.example.com/items")
 print(resp.body())
 resp.dispose()
 
 // POST with JSON body
-var created: HttpResponse = client.post(
+var created: CurlResponse = client.post(
     "https://api.example.com/items",
     "application/json",
     "{\"name\": \"widget\"}"
@@ -77,7 +77,7 @@ client.dispose()
 
 ---
 
-## HttpResponse
+## CurlResponse
 
 The result of any HTTP request. Always call `dispose()` when done to free the response buffers.
 
@@ -90,7 +90,7 @@ The result of any HTTP request. Always call `dispose()` when done to free the re
 | `dispose` | `fn dispose(): void` | Free response memory |
 
 ```sindarin
-var resp: HttpResponse = client.get("https://api.example.com/data")
+var resp: CurlResponse = client.get("https://api.example.com/data")
 
 if resp.status() == 200 =>
     print(resp.body())
@@ -112,7 +112,7 @@ fn main(): void =>
     var client: CurlClient = CurlClient.new()
     client.setHeader("Accept", "application/json")
 
-    var resp: HttpResponse = client.get("https://httpbin.org/json")
+    var resp: CurlResponse = client.get("https://httpbin.org/json")
     print($"{resp.status()}: {resp.body()}\n")
     resp.dispose()
 
@@ -128,7 +128,7 @@ fn main(): void =>
     var client: CurlClient = CurlClient.new()
     client.setHeader("Authorization", "Bearer token")
 
-    var updated: HttpResponse = client.put(
+    var updated: CurlResponse = client.put(
         "https://api.example.com/items/42",
         "application/json",
         "{\"name\": \"updated\"}"
@@ -136,7 +136,7 @@ fn main(): void =>
     print($"PUT: {updated.status()}\n")
     updated.dispose()
 
-    var deleted: HttpResponse = client.delete("https://api.example.com/items/42")
+    var deleted: CurlResponse = client.delete("https://api.example.com/items/42")
     print($"DELETE: {deleted.status()}\n")
     deleted.dispose()
 
@@ -150,7 +150,7 @@ import "sindarin-pkg-curl/src/curl"
 
 fn main(): void =>
     var client: CurlClient = CurlClient.new()
-    var resp: HttpResponse = client.get("https://httpbin.org/response-headers?X-Custom=hello")
+    var resp: CurlResponse = client.get("https://httpbin.org/response-headers?X-Custom=hello")
 
     print(resp.header("Content-Type"))
     print(resp.header("X-Custom"))
