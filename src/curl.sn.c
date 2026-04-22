@@ -255,12 +255,30 @@ static RtCurlResponse *do_request(CurlClientInternal *internal,
 
     CURLcode rc = curl_easy_perform(easy);
     if (rc != CURLE_OK) {
-        fprintf(stderr, "curl_easy_perform failed: %s\n", curl_easy_strerror(rc));
+        /* Transport-layer failure (timeout, connection refused, DNS, TLS
+         * handshake, etc). DO NOT exit(1) — the caller has a valid use
+         * for gracefully degrading on a soft HTTP error (e.g. retry,
+         * leave diagnostic NULL, circuit-break). Return a response with
+         * status_code=0 and the curl error message as the body so the
+         * caller can branch on status != 200 and inspect the reason.
+         *
+         * History: this path used to exit(1) on every perform error,
+         * which meant a single Ollama timeout would hard-kill the whole
+         * process even though the consuming code already had a
+         * graceful-degradation branch ready. */
+        const char *errmsg = curl_easy_strerror(rc);
+        fprintf(stderr, "curl_easy_perform failed: %s\n", errmsg);
+
+        RtCurlResponse *err_resp = __sn__CurlResponse__new();
+        err_resp->status_code = 0;
+        err_resp->body_str    = strdup(errmsg ? errmsg : "curl_easy_perform failed");
+        err_resp->headers_str = strdup("");
+
         curl_buffer_free(&resp_body);
         curl_buffer_free(&resp_hdrs);
         curl_easy_cleanup(easy);
         if (hdr_list) curl_slist_free_all(hdr_list);
-        exit(1);
+        return err_resp;
     }
 
     long status = 0;
