@@ -23,6 +23,20 @@
 # client.setHeader(name, value)                 Add a persistent request header
 # client.dispose()                              Free client resources
 #
+# Streaming downloads (response body delivered chunk-by-chunk):
+# client.getStream(url, onChunk)                GET, stream response body
+# client.postStream(url, ct, body, onChunk)     POST, stream response body
+# client.putStream(url, ct, body, onChunk)      PUT, stream response body
+# client.patchStream(url, ct, body, onChunk)    PATCH, stream response body
+# client.deleteStream(url, onChunk)             DELETE, stream response body
+# onChunk: fn(str): bool — return false to abort the transfer.
+#
+# Streaming uploads (request body pulled from a producer):
+# client.postChunked(url, ct, produceChunk)     POST, stream request body
+# client.putChunked(url, ct, produceChunk)      PUT, stream request body
+# client.patchChunked(url, ct, produceChunk)    PATCH, stream request body
+# produceChunk: fn(): str — return "" to signal end of body.
+#
 # resp.status()                                 HTTP status code
 # resp.body()                                   Response body as string
 # resp.headers()                                Raw response headers
@@ -105,6 +119,37 @@ native struct CurlClient as ref =>
   fn delete(url: str): CurlResponse =>
     return sn_curl_client_delete(self, url)
 
+  # Streaming GET — onChunk is called for each piece of the response body as
+  # it arrives. Return false from onChunk to abort the transfer. The returned
+  # CurlResponse has status() and headers() populated; body() is empty.
+  fn getStream(url: str, onChunk: fn(str): bool): CurlResponse =>
+    return sn_curl_client_get_stream(self, url, onChunk)
+
+  # Streaming POST — same as getStream but sends a full request body up front.
+  fn postStream(url: str, contentType: str, body: str, onChunk: fn(str): bool): CurlResponse =>
+    return sn_curl_client_post_stream(self, url, contentType, body, onChunk)
+
+  fn putStream(url: str, contentType: str, body: str, onChunk: fn(str): bool): CurlResponse =>
+    return sn_curl_client_put_stream(self, url, contentType, body, onChunk)
+
+  fn patchStream(url: str, contentType: str, body: str, onChunk: fn(str): bool): CurlResponse =>
+    return sn_curl_client_patch_stream(self, url, contentType, body, onChunk)
+
+  fn deleteStream(url: str, onChunk: fn(str): bool): CurlResponse =>
+    return sn_curl_client_delete_stream(self, url, onChunk)
+
+  # Chunked POST — produceChunk is called repeatedly; each return value is
+  # appended to the request body. Return "" to signal end of body. The full
+  # response body is buffered and available via resp.body() as usual.
+  fn postChunked(url: str, contentType: str, produceChunk: fn(): str): CurlResponse =>
+    return sn_curl_client_post_chunked(self, url, contentType, produceChunk)
+
+  fn putChunked(url: str, contentType: str, produceChunk: fn(): str): CurlResponse =>
+    return sn_curl_client_put_chunked(self, url, contentType, produceChunk)
+
+  fn patchChunked(url: str, contentType: str, produceChunk: fn(): str): CurlResponse =>
+    return sn_curl_client_patch_chunked(self, url, contentType, produceChunk)
+
   # Set the request timeout in milliseconds (0 = no timeout)
   fn setTimeout(ms: int): void =>
     sn_curl_client_set_timeout(self, ms)
@@ -136,3 +181,15 @@ native fn sn_curl_client_patch(client: CurlClient, url: str, contentType: str, b
 native fn sn_curl_client_delete(client: CurlClient, url: str): CurlResponse
 native fn sn_curl_client_set_timeout(client: CurlClient, ms: int): void
 native fn sn_curl_client_set_header(client: CurlClient, name: str, value: str): void
+
+# Streaming downloads
+native fn sn_curl_client_get_stream(client: CurlClient, url: str, onChunk: fn(str): bool): CurlResponse
+native fn sn_curl_client_post_stream(client: CurlClient, url: str, contentType: str, body: str, onChunk: fn(str): bool): CurlResponse
+native fn sn_curl_client_put_stream(client: CurlClient, url: str, contentType: str, body: str, onChunk: fn(str): bool): CurlResponse
+native fn sn_curl_client_patch_stream(client: CurlClient, url: str, contentType: str, body: str, onChunk: fn(str): bool): CurlResponse
+native fn sn_curl_client_delete_stream(client: CurlClient, url: str, onChunk: fn(str): bool): CurlResponse
+
+# Streaming uploads
+native fn sn_curl_client_post_chunked(client: CurlClient, url: str, contentType: str, produceChunk: fn(): str): CurlResponse
+native fn sn_curl_client_put_chunked(client: CurlClient, url: str, contentType: str, produceChunk: fn(): str): CurlResponse
+native fn sn_curl_client_patch_chunked(client: CurlClient, url: str, contentType: str, produceChunk: fn(): str): CurlResponse

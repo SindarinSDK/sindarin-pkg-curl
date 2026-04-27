@@ -39,5 +39,57 @@ fn main(): void =>
     exit(1)
   notFound.dispose()
 
+  # Test 6: streaming GET delivers chunks (httpbin /stream/N emits N JSON lines)
+  var chunkCount: int = 0
+  var totalBytes: int = 0
+  var streamResp: CurlResponse = client.getStream("https://httpbin.org/stream/3", fn(chunk: str): bool =>
+    chunkCount += 1
+    totalBytes += chunk.length
+    return true
+  )
+  if streamResp.status() != 200 =>
+    print($"FAIL: stream expected status 200, got {streamResp.status()}\n")
+    exit(1)
+  if chunkCount < 1 =>
+    print($"FAIL: stream expected at least 1 chunk, got {chunkCount}\n")
+    exit(1)
+  if totalBytes < 100 =>
+    print($"FAIL: stream expected >= 100 bytes total, got {totalBytes}\n")
+    exit(1)
+  if streamResp.body().length != 0 =>
+    print("FAIL: streaming response body() should be empty\n")
+    exit(1)
+  streamResp.dispose()
+
+  # Test 7: returning false from onChunk aborts the transfer
+  var abortedChunks: int = 0
+  var abortResp: CurlResponse = client.getStream("https://httpbin.org/stream/20", fn(chunk: str): bool =>
+    abortedChunks += 1
+    return false
+  )
+  if abortedChunks != 1 =>
+    print($"FAIL: abort expected exactly 1 chunk, got {abortedChunks}\n")
+    exit(1)
+  abortResp.dispose()
+
+  # Test 8: chunked POST upload (producer returns "" to signal EOF)
+  var chunks: str[] = {"hello ", "from ", "sindarin ", "streaming"}
+  var idx: int = 0
+  var uploadResp: CurlResponse = client.postChunked("https://httpbin.org/post", "text/plain", fn(): str =>
+    if idx >= chunks.length =>
+      return ""
+    var c: str = chunks[idx]
+    idx += 1
+    return c
+  )
+  if uploadResp.status() != 200 =>
+    print($"FAIL: chunked upload expected 200, got {uploadResp.status()}\n")
+    exit(1)
+  # httpbin /post echoes the request body inside the JSON response under "data"
+  if uploadResp.body().indexOf("hello from sindarin streaming") < 0 =>
+    print($"FAIL: chunked upload body did not echo concatenated chunks\nbody: {uploadResp.body()}\n")
+    exit(1)
+  uploadResp.dispose()
+
   client.dispose()
   print("PASS\n")
